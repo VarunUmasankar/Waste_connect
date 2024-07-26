@@ -27,6 +27,7 @@ def load_data():
 def save_data(waste_data):
     xlsx_path = 'waste_data.xlsx'
     waste_data.to_excel(xlsx_path, engine='openpyxl')
+    
 
 # Load existing data
 waste_data = load_data()
@@ -61,10 +62,39 @@ wet_waste_columns = [col for col in waste_data.columns if 'Wet Waste' in col]
 
 # Set up the Streamlit app
 st.sidebar.title("Waste Connect")
-menu_options = ["Home", "Areas", "Waste Area Input", "Product Suggestion"]
-option = st.sidebar.radio("Menu", menu_options)
 
-if option == "Home":
+# Custom CSS to style the buttons to be the same size
+st.markdown(
+    """
+    <style>
+    .sidebar .stButton button {
+        width: 100%;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Initialize session state if not already set
+if 'menu' not in st.session_state:
+    st.session_state['menu'] = 'Home'
+
+# Add sidebar buttons for each menu option
+if st.sidebar.button("Home"):
+    st.session_state['menu'] = "Home"
+if st.sidebar.button("Areas"):
+    st.session_state['menu'] = "Areas"
+if st.sidebar.button("Waste Area Input"):
+    st.session_state['menu'] = "Waste Area Input"
+if st.sidebar.button("Product Suggestion"):
+    st.session_state['menu'] = "Product Suggestion"
+
+# Check session state to determine the current menu
+menu_option = st.session_state['menu']
+
+if menu_option == "Home":
     st.title("Welcome to Waste Connect")
     st.write("This app helps you track waste data in Chennai and provides eco-friendly product suggestions.")
     st.write("Menu Options:")
@@ -72,7 +102,7 @@ if option == "Home":
     st.write("2. Waste Area Input: Input dry and wet waste data for your area.")
     st.write("3. Product Suggestion: Select a type of waste to get product recommendations.")
 
-elif option == "Areas":
+elif menu_option == "Areas":
     st.title("Waste Data by Area")
     waste_data = load_data()  # Reload data to reflect any updates
     area = st.selectbox("Select Area", [col.replace(" Dry Waste", "") for col in dry_waste_columns])
@@ -90,7 +120,7 @@ elif option == "Areas":
         else:
             st.write("No data available for the selected date.")
 
-elif option == "Waste Area Input":
+elif menu_option == "Waste Area Input":
     st.title("Waste Data Input")
 
     area = st.selectbox("Select Area", areas)
@@ -126,10 +156,13 @@ elif option == "Waste Area Input":
     st.write("Updated Waste Data:")
     st.dataframe(waste_data)
 
-elif option == "Product Suggestion":
+elif menu_option == "Product Suggestion":
     st.title("Product Suggestions for Waste Reduction")
     waste_type = st.selectbox("Select Waste Type", list(product_suggestions.keys()))
     suggestion = product_suggestions[waste_type]
+
+    st.write(f"**Product:** {suggestion['Product']}")
+    st.write(f"**Description:** {suggestion['Description']}")
 
     st.write(f"**Product:** {suggestion['Product']}")
     st.write(f"**Description:** {suggestion['Description']}")
